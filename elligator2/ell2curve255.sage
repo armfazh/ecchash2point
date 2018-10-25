@@ -10,7 +10,7 @@ class Ell2Curve255:
     Optimized implementation of Elligator2 for Curve25519
     """
 
-    def __init__(self,optimized=True):
+    def __init__(self,argOptimized=True,argProyective=False):
         """
         Optimized (true default)
         """
@@ -20,7 +20,8 @@ class Ell2Curve255:
         self.B = self.F(1)
         self.u = self.F(2)
         self.E = EllipticCurve(self.F, [0, self.A, 0, self.B, 0])
-        self.opt = optimized
+        self.opt = argOptimized
+        self.proy = argProyective
 
     def _abs(self,a):
         """
@@ -47,6 +48,8 @@ class Ell2Curve255:
         """
         Maps r to a point on Curve25519
         """
+        if self.proy:
+            return self._proyective(r)
         if self.opt == False:
             return self._ell2curve255(r)
         else:
@@ -109,3 +112,35 @@ class Ell2Curve255:
                 y = y*sqrt_of_minusone
             y = self._abs(y)
         return self.E([x0/x1,y])
+
+    def _proyective(self,r):
+        sqrtnegone = self.F(0x2b8324804fc1df0b2b4d00993dfbd7a72f431806ad2fe478c4ee1b274a0ea0b0)
+        ccA3 = self.A**3
+        negA = -self.A
+        pminus5div8 = ZZ((self.p-5)//8)
+        twopowpminus3div8 = self.F(2)**ZZ((self.p+3)//8)
+                                      #  M | S | A | M_A | E
+        ur2 = 2*r**2                  #    | 1 | 1 |     |
+        Z = ur2 + 1                   #    |   | 1 |     |
+        d = (ccA3-self.A*Z)*Z-ccA3    #  1 |   | 2 |  1  |
+        d2 = d**2                     #    | 1 |   |     |
+        Z3 = Z**2*Z                   #  1 | 1 |   |     |
+        Z6 = Z3**2                    #    | 1 |   |     |
+        Z9 = Z6*Z3                    #  1 |   |   |     |
+        Zc = Z6**2                    #    | 1 |   |     |
+        Y = d*Z9                      #  1 |   |   |     |
+        Y = Y*(Y*Zc)**pminus5div8     #  2 |   |   |     | 1
+        Y2 = Y**2                     #    | 1 |   |     |
+        Y4 = Y2**2                    #    | 1 |   |     |
+        bit1 = Z6*Y4 == d2            #  1 |   |   |     |
+        ur2 = 1 if bit1 else ur2      #    |   |   |     |
+        X = negA*ur2                  #    |   |   |  1  |
+        # Ycoordinate
+        d = d*ur2                     #  1 |   |   |     |
+        Y = Y * (1 if bit1 else r*twopowpminus3div8) # 1M_A
+        Y2 = Y**2                     #    | 1 |   |     |
+        bit2 = Z3*Y2 != d             #  1 |   |   |     |
+        Y = Y * (sqrtnegone if bit2 else 1) # 1M
+        Y = self._abs(Y) * (-1 if bit1 else 1) # 1A
+        Y = Y*Z                       #  1 |   |   |     |
+        return self.E([X,Y,Z])  # Cost: 11M+8S+5A+3M_A+1E

@@ -1,3 +1,4 @@
+# @author Armando Faz
 
 load("ell2generic.sage")
 load("ell2curve255.sage")
@@ -14,7 +15,13 @@ class SuiteTest(SageObject):
         A = 486662
         B = 1
         ell2Gen = Ell2Generic(A,B,p)
-        ell2cu255 = Ell2Curve255()
+        ell2cu255 = Ell2Curve255(argProyective=False)
+        for i in range(100):
+            e = randint(0,p)
+            P0 = ell2Gen.maptocurve(e)
+            P1 = ell2cu255.maptocurve(e)
+            tester.assertEqual(P0 , P1)
+        ell2cu255 = Ell2Curve255(argProyective=True)
         for i in range(100):
             e = randint(0,p)
             P0 = ell2Gen.maptocurve(e)
