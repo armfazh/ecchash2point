@@ -118,7 +118,7 @@ class Ell2Curve255:
         ccA3 = self.A**3
         negA = -self.A
         pminus5div8 = ZZ((self.p-5)//8)
-        twopowpminus3div8 = self.F(2)**ZZ((self.p+3)//8)
+        twopowpplus3div8 = self.F(2)**ZZ((self.p+3)//8)
                                       #  M | S | A | M_A | E
         ur2 = 2*r**2                  #    | 1 | 1 |     |
         Z = ur2 + 1                   #    |   | 1 |     |
@@ -129,7 +129,8 @@ class Ell2Curve255:
         Z9 = Z6*Z3                    #  1 |   |   |     |
         Zc = Z6**2                    #    | 1 |   |     |
         Y = d*Z9                      #  1 |   |   |     |
-        Y = Y*(Y*Zc)**pminus5div8     #  2 |   |   |     | 1
+        Yb = (Y*Zc)**pminus5div8      #  1 |   |   |     | 1
+        Y = Y*Yb                      #  1 |   |   |     |
         Y2 = Y**2                     #    | 1 |   |     |
         Y4 = Y2**2                    #    | 1 |   |     |
         bit1 = Z6*Y4 == d2            #  1 |   |   |     |
@@ -137,10 +138,10 @@ class Ell2Curve255:
         X = negA*ur2                  #    |   |   |  1  |
         # Ycoordinate
         d = d*ur2                     #  1 |   |   |     |
-        Y = Y * (1 if bit1 else r*twopowpminus3div8) # 1M_A
+        Y = Y * (1 if bit1 else r*twopowpplus3div8) # 1M+1M_A
         Y2 = Y**2                     #    | 1 |   |     |
         bit2 = Z3*Y2 != d             #  1 |   |   |     |
         Y = Y * (sqrtnegone if bit2 else 1) # 1M
         Y = self._abs(Y) * (-1 if bit1 else 1) # 1A
         Y = Y*Z                       #  1 |   |   |     |
-        return self.E([X,Y,Z])  # Cost: 11M+8S+5A+3M_A+1E
+        return self.E([X,Y,Z])  # Cost: 12M+8S+5A+3M_A+1E

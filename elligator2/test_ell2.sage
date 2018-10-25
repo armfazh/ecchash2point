@@ -3,8 +3,6 @@
 load("ell2generic.sage")
 load("ell2curve255.sage")
 
-Hex = lambda x: map(hex,map(int,x))
-
 class SuiteTest(SageObject):
     def _test_curve255(self,tester):
         """
