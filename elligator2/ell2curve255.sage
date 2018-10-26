@@ -116,12 +116,12 @@ class Ell2Curve255:
     def _proyective(self,r):
         sqrtnegone = self.F(0x2b8324804fc1df0b2b4d00993dfbd7a72f431806ad2fe478c4ee1b274a0ea0b0)
         ccA3 = self.A**3
-        negA = -self.A
         pminus5div8 = ZZ((self.p-5)//8)
         twopowpplus3div8 = self.F(2)**ZZ((self.p+3)//8)
                                       #  M | S | A | M_A | E
         ur2 = 2*r**2                  #    | 1 | 1 |     |
         Z = ur2 + 1                   #    |   | 1 |     |
+        X = -self.A
         d = (ccA3-self.A*Z)*Z-ccA3    #  1 |   | 2 |  1  |
         d2 = d**2                     #    | 1 |   |     |
         Z3 = Z**2*Z                   #  1 | 1 |   |     |
@@ -135,7 +135,7 @@ class Ell2Curve255:
         Y4 = Y2**2                    #    | 1 |   |     |
         bit1 = Z6*Y4 == d2            #  1 |   |   |     |
         ur2 = 1 if bit1 else ur2      #    |   |   |     |
-        X = negA*ur2                  #    |   |   |  1  |
+        X = X*ur2                     #    |   |   |  1  |
         # Ycoordinate
         d = d*ur2                     #  1 |   |   |     |
         Y = Y * (1 if bit1 else r*twopowpplus3div8) # 1M+1M_A
